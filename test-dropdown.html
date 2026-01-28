@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dropdown Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #1a2332;
+            color: white;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .search-wrapper {
+            position: relative;
+            margin: 20px 0;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(30px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+        .dropdown.active {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .city-name {
+            font-weight: 600;
+        }
+        .city-country {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        .info {
+            background: rgba(16, 185, 129, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Dropdown Test</h1>
+        <div class="info" id="info">Loading cities.js...</div>
+        
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="Type to search cities (e.g., 'Ko')...">
+            <div class="dropdown" id="dropdown"></div>
+        </div>
+        
+        <div id="selected"></div>
+    </div>
+
+    <script src="js/cities.js"></script>
+    <script>
+        // Check if cities loaded
+        const info = document.getElementById('info');
+        if (typeof POPULAR_CITIES !== 'undefined') {
+            info.innerHTML = `✅ Successfully loaded ${POPULAR_CITIES.length} cities!`;
+            info.style.background = 'rgba(16, 185, 129, 0.2)';
+        } else {
+            info.innerHTML = '❌ Failed to load cities.js';
+            info.style.background = 'rgba(239, 68, 68, 0.2)';
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        const dropdown = document.getElementById('dropdown');
+        const selected = document.getElementById('selected');
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            console.log('Input:', query);
+
+            if (!query || query.length < 2) {
+                dropdown.classList.remove('active');
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            const filtered = POPULAR_CITIES.filter(city =>
+                city.name.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 10);
+
+            console.log('Found:', filtered.length, 'cities');
+
+            if (filtered.length === 0) {
+                dropdown.classList.remove('active');
+                return;
+            }
+
+            dropdown.innerHTML = filtered.map(city => `
+                <div class="dropdown-item" onclick="selectCity('${city.name}')">
+                    <span class="city-name">${city.name}</span>
+                    <span class="city-country">${city.country}</span>
+                </div>
+            `).join('');
+
+            dropdown.classList.add('active');
+        });
+
+        function selectCity(cityName) {
+            searchInput.value = cityName;
+            dropdown.classList.remove('active');
+            selected.innerHTML = `<div style="margin-top:20px; padding:15px; background:rgba(139,92,246,0.2); border-radius:8px;">✅ Selected: <strong>${cityName}</strong></div>`;
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

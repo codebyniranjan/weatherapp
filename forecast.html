@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast - Weather System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>5-Day Forecast</h1>
+            <p>Extended weather forecast for planning ahead</p>
+        </div>
+
+        <!-- City Selector -->
+        <div class="forecast-search">
+            <div class="search-card glass-card">
+                <div class="search-row">
+                    <div class="search-input-container">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="forecastCitySearch" 
+                                placeholder="Search for a city..." 
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div id="forecastCityDropdown" class="city-dropdown"></div>
+                    </div>
+                    <button id="forecastSearchBtn" class="location-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <span>Get Forecast</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state hidden">
+            <div class="loading-spinner"></div>
+            <p>Loading forecast data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- Forecast Content -->
+        <div id="forecastContent" class="forecast-content hidden">
+            <div class="forecast-header-info">
+                <h2 id="forecastCity">--</h2>
+                <p id="forecastTimestamp">--</p>
+            </div>
+
+            <!-- Hourly Forecast -->
+            <div class="forecast-section">
+                <h3 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Next 24 Hours
+                </h3>
+                <div class="hourly-forecast-grid" id="hourlyForecast">
+                    <!-- Hourly forecast cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Daily Forecast -->
+            <div class="forecast-section">
+                <h3 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    5-Day Forecast
+                </h3>
+                <div class="daily-forecast-grid" id="dailyForecast">
+                    <!-- Daily forecast cards will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/cities.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        requireAuth();
+        applyDarkMode();
+
+        const forecastCitySearch = document.getElementById('forecastCitySearch');
+        const forecastSearchBtn = document.getElementById('forecastSearchBtn');
+        const forecastCityDropdown = document.getElementById('forecastCityDropdown');
+        const loadingState = document.getElementById('loadingState');
+        const errorMessage = document.getElementById('errorMessage');
+        const forecastContent = document.getElementById('forecastContent');
+
+        // City dropdown functionality
+        function updateForecastDropdown(query) {
+            if (!query || query.length < 2) {
+                forecastCityDropdown.classList.remove('active');
+                forecastCityDropdown.innerHTML = '';
+                return;
+            }
+
+            const filtered = POPULAR_CITIES.filter(city =>
+                city.name.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 10);
+
+            if (filtered.length === 0) {
+                forecastCityDropdown.classList.remove('active');
+                return;
+            }
+
+            forecastCityDropdown.innerHTML = filtered.map(city => `
+                <div class="city-dropdown-item" data-city="${city.name}">
+                    <span class="city-name">${city.name}</span>
+                    <span class="city-country">${city.country}</span>
+                </div>
+            `).join('');
+
+            forecastCityDropdown.classList.add('active');
+
+            document.querySelectorAll('#forecastCityDropdown .city-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const city = item.dataset.city;
+                    forecastCitySearch.value = city;
+                    forecastCityDropdown.classList.remove('active');
+                    loadForecast(city);
+                });
+            });
+        }
+
+        async function loadForecast(city) {
+            try {
+                loadingState.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                forecastContent.classList.add('hidden');
+
+                const data = await fetchForecastWeather(city);
+                const unit = getTemperatureUnit();
+
+                // Update header
+                document.getElementById('forecastCity').textContent = `${data.city.name}, ${data.city.country}`;
+                document.getElementById('forecastTimestamp').textContent = new Date().toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+
+                // Process and display hourly forecast
+                const hourlyData = processHourlyForecast(data, unit);
+                displayHourlyForecast(hourlyData);
+
+                // Process and display daily forecast
+                const dailyData = processDailyForecast(data, unit);
+                displayDailyForecast(dailyData);
+
+                forecastContent.classList.remove('hidden');
+
+            } catch (error) {
+                errorMessage.textContent = error.message || 'Failed to fetch forecast data';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        function displayHourlyForecast(hourlyData) {
+            const container = document.getElementById('hourlyForecast');
+            container.innerHTML = hourlyData.map(hour => `
+                <div class="hourly-card">
+                    <div class="hour-time">${hour.time}</div>
+                    <img src="${hour.iconUrl}" alt="${hour.condition}" class="forecast-icon">
+                    <div class="hour-temp">${hour.temp}${hour.unitSymbol}</div>
+                    <div class="hour-condition">${hour.condition}</div>
+                    ${hour.pop > 0 ? `<div class="hour-pop">💧 ${hour.pop}%</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function displayDailyForecast(dailyData) {
+            const container = document.getElementById('dailyForecast');
+            container.innerHTML = dailyData.map(day => `
+                <div class="daily-card">
+                    <div class="daily-header">
+                        <div class="daily-date">${day.dateString}</div>
+                        <img src="${day.iconUrl}" alt="${day.condition}" class="forecast-icon-large">
+                    </div>
+                    <div class="daily-temps">
+                        <span class="temp-high">↑ ${day.maxTemp}${day.unitSymbol}</span>
+                        <span class="temp-low">↓ ${day.minTemp}${day.unitSymbol}</span>
+                    </div>
+                    <div class="daily-condition">${day.condition}</div>
+                    <div class="daily-details">
+                        <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg> ${day.avgHumidity}%</div>
+                        <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path></svg> ${day.avgWind} m/s</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Event listeners
+        forecastCitySearch.addEventListener('input', (e) => {
+            updateForecastDropdown(e.target.value);
+        });
+
+        forecastSearchBtn.addEventListener('click', () => {
+            const city = forecastCitySearch.value.trim();
+            if (city) {
+                forecastCityDropdown.classList.remove('active');
+                loadForecast(city);
+            }
+        });
+
+        forecastCitySearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const city = forecastCitySearch.value.trim();
+                if (city) {
+                    forecastCityDropdown.classList.remove('active');
+                    loadForecast(city);
+                }
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!forecastCitySearch.contains(e.target) && !forecastCityDropdown.contains(e.target)) {
+                forecastCityDropdown.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadForecast(getDefaultCity());
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Weather System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Settings</h1>
+            <p>Customize your weather experience</p>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="settings-content">
+            <!-- User Profile Section -->
+            <div class="settings-section">
+                <h2 class="section-heading">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    User Profile
+                </h2>
+                <div class="settings-card">
+                    <div class="profile-info">
+                        <div class="profile-avatar">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 id="profileName">--</h3>
+                            <p id="profileEmail">--</p>
+                            <small id="profileJoined">Member since: --</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Unit Section -->
+            <div class="settings-section">
+                <h2 class="section-heading">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                    </svg>
+                    Temperature Unit
+                </h2>
+                <div class="settings-card">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Preferred Temperature Unit</h3>
+                            <p>Choose between Celsius and Fahrenheit</p>
+                        </div>
+                        <div class="toggle-group">
+                            <button id="celsiusBtn" class="toggle-option">°C</button>
+                            <button id="fahrenheitBtn" class="toggle-option">°F</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Default City Section -->
+            <div class="settings-section">
+                <h2 class="section-heading">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    Default City
+                </h2>
+                <div class="settings-card">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Home Location</h3>
+                            <p>Weather for this city will be shown when you login</p>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="defaultCityInput" placeholder="Enter city name">
+                            <button id="saveDefaultCity" class="btn-primary">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="settings-section">
+                <h2 class="section-heading">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    Weather Alerts
+                </h2>
+                <div class="settings-card">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Enable Weather Alerts</h3>
+                            <p>Receive warnings for extreme weather conditions</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="alertsToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dark Mode Section -->
+            <div class="settings-section">
+                <h2 class="section-heading">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    Appearance
+                </h2>
+                <div class="settings-card">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Dark Mode</h3>
+                            <p>Switch to a darker color scheme</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management Section -->
+            <div class="settings-section">
+                <h2 class="section-heading">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    Data Management
+                </h2>
+                <div class="settings-card">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Reset Settings</h3>
+                            <p>Restore all settings to default values</p>
+                        </div>
+                        <button id="resetSettingsBtn" class="btn-secondary">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="settingsMessage" class="settings-message hidden"></div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        requireAuth();
+        applyDarkMode();
+
+        const settingsMessage = document.getElementById('settingsMessage');
+
+        // Load user profile
+        function loadProfile() {
+            const user = getCurrentUser();
+            if (user) {
+                document.getElementById('profileName').textContent = user.name;
+                document.getElementById('profileEmail').textContent = user.email;
+                document.getElementById('profileJoined').textContent = `Member since: ${new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+            }
+        }
+
+        // Load current settings
+        function loadSettings() {
+            const settings = getSettings();
+            
+            // Temperature unit
+            const unit = settings.temperatureUnit || 'celsius';
+            document.getElementById('celsiusBtn').classList.toggle('active', unit === 'celsius');
+            document.getElementById('fahrenheitBtn').classList.toggle('active', unit === 'fahrenheit');
+            
+            // Default city
+            document.getElementById('defaultCityInput').value = settings.defaultCity || 'Thiruvananthapuram';
+            
+            // Alerts
+            document.getElementById('alertsToggle').checked = settings.enableAlerts !== false;
+            
+            // Dark mode
+            document.getElementById('darkModeToggle').checked = settings.darkMode === true;
+        }
+
+        // Show message
+        function showMessage(message, isSuccess = true) {
+            settingsMessage.textContent = message;
+            settingsMessage.className = `settings-message ${isSuccess ? 'success' : 'error'}`;
+            
+            setTimeout(() => {
+                settingsMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Temperature unit buttons
+        document.getElementById('celsiusBtn').addEventListener('click', () => {
+            updateSetting('temperatureUnit', 'celsius');
+            loadSettings();
+            showMessage('Temperature unit set to Celsius');
+        });
+
+        document.getElementById('fahrenheitBtn').addEventListener('click', () => {
+            updateSetting('temperatureUnit', 'fahrenheit');
+            loadSettings();
+            showMessage('Temperature unit set to Fahrenheit');
+        });
+
+        // Save default city
+        document.getElementById('saveDefaultCity').addEventListener('click', () => {
+            const city = document.getElementById('defaultCityInput').value.trim();
+            if (city) {
+                updateSetting('defaultCity', city);
+                showMessage(`Default city set to ${city}`);
+            }
+        });
+
+        // Alerts toggle
+        document.getElementById('alertsToggle').addEventListener('change', (e) => {
+            updateSetting('enableAlerts', e.target.checked);
+            showMessage(e.target.checked ? 'Weather alerts enabled' : 'Weather alerts disabled');
+        });
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('change', (e) => {
+            toggleDarkMode();
+            showMessage(e.target.checked ? 'Dark mode enabled' : 'Dark mode disabled');
+        });
+
+        // Reset settings
+        document.getElementById('resetSettingsBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all settings to defaults? This action cannot be undone.')) {
+                resetSettings();
+                loadSettings();
+                applyDarkMode();
+                showMessage('All settings have been reset to defaults');
+            }
+        });
+
+        // Initialize
+        loadProfile();
+        loadSettings();
+    </script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Weather System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+</head>
+<body>
+    <!-- Navbar will be injected here -->
+
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Current Weather</h1>
+            <p>Real-time weather information for your location</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-card glass-card">
+                <div class="search-row">
+                    <div class="search-input-container">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="citySearch" 
+                                placeholder="Search for a city..." 
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div id="cityDropdown" class="city-dropdown"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state hidden">
+            <div class="loading-spinner"></div>
+            <p>Fetching weather data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- Weather Content -->
+        <div id="weatherContent" class="weather-content hidden">
+            <!-- Current Weather Card -->
+            <div class="weather-main-card">
+                <div class="weather-location">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <h2 id="cityName">--</h2>
+                    <span id="countryCode">--</span>
+                </div>
+
+                <div class="weather-main-info">
+                    <img id="weatherIcon" src="" alt="Weather icon" class="weather-icon-large">
+                    <div class="temperature-display">
+                        <div class="temp-value" id="mainTemp">--°</div>
+                        <div class="temp-range">
+                            <span>H: <span id="tempMax">--°</span></span>
+                            <span>L: <span id="tempMin">--°</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weather-description" id="weatherDesc">--</div>
+
+                <div class="weather-details-grid">
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                        </svg>
+                        <div>
+                            <div class="detail-label">Feels Like</div>
+                            <div class="detail-value" id="feelsLike">--°</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                        </svg>
+                        <div>
+                            <div class="detail-label">Humidity</div>
+                            <div class="detail-value" id="humidity">--%</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+                        </svg>
+                        <div>
+                            <div class="detail-label">Wind Speed</div>
+                            <div class="detail-value" id="windSpeed">-- m/s</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <div>
+                            <div class="detail-label">Visibility</div>
+                            <div class="detail-value" id="visibility">-- km</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                        </svg>
+                        <div>
+                            <div class="detail-label">Pressure</div>
+                            <div class="detail-value" id="pressure">-- hPa</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3h18"></path>
+                            <path d="M3 9h18"></path>
+                            <path d="M3 15h18"></path>
+                        </svg>
+                        <div>
+                            <div class="detail-label">Cloudiness</div>
+                            <div class="detail-value" id="clouds">--%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="forecast.html" class="action-card">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <h3>View Forecast</h3>
+                    <p>5-day weather forecast</p>
+                </a>
+
+                <a href="alerts.html" class="action-card">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <h3>Weather Alerts</h3>
+                    <p>Current weather warnings</p>
+                </a>
+
+                <a href="history.html" class="action-card">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <h3>Search History</h3>
+                    <p>View past searches</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/cities.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        // Protect page - require authentication
+        requireAuth();
+
+        // Apply dark mode if enabled
+        applyDarkMode();
+
+        // DOM elements
+        const citySearch = document.getElementById('citySearch');
+        const loadingState = document.getElementById('loadingState');
+        const errorMessage = document.getElementById('errorMessage');
+        const weatherContent = document.getElementById('weatherContent');
+        const cityDropdown = document.getElementById('cityDropdown');
+
+        // Current weather data
+        let currentWeather = null;
+        let currentCity = null;
+
+        /**
+         * Filter and display city dropdown
+         */
+        function updateCityDropdown(query) {
+            console.log('updateCityDropdown called with:', query);
+            console.log('POPULAR_CITIES available:', typeof POPULAR_CITIES !== 'undefined');
+            console.log('POPULAR_CITIES length:', POPULAR_CITIES ? POPULAR_CITIES.length : 0);
+            
+            if (!query || query.length < 2) {
+                cityDropdown.classList.remove('active');
+                cityDropdown.innerHTML = '';
+                return;
+            }
+
+            const filtered = POPULAR_CITIES.filter(city =>
+                city.name.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 10);
+
+            console.log('Filtered cities:', filtered.length);
+
+            if (filtered.length === 0) {
+                cityDropdown.classList.remove('active');
+                return;
+            }
+
+            cityDropdown.innerHTML = filtered.map(city => `
+                <div class="city-dropdown-item" data-city="${city.name}">
+                    <span class="city-name">${city.name}</span>
+                    <span class="city-country">${city.country}</span>
+                </div>
+            `).join('');
+
+            cityDropdown.classList.add('active');
+            console.log('Dropdown activated, classes:', cityDropdown.className);
+
+            // Add click handlers
+            document.querySelectorAll('.city-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const city = item.dataset.city;
+                    citySearch.value = city;
+                    cityDropdown.classList.remove('active');
+                    loadWeather(city);
+                });
+            });
+        }
+
+        /**
+         * Display weather data on the page
+         */
+        function displayWeather(data) {
+            const unit = getTemperatureUnit();
+            const weather = formatWeatherData(data, unit);
+            
+            // Update DOM elements
+            document.getElementById('cityName').textContent = weather.city;
+            document.getElementById('countryCode').textContent = weather.country;
+            document.getElementById('mainTemp').textContent = weather.temperature + weather.unitSymbol;
+            document.getElementById('tempMax').textContent = weather.tempMax + weather.unitSymbol;
+            document.getElementById('tempMin').textContent = weather.tempMin + weather.unitSymbol;
+            document.getElementById('weatherDesc').textContent = weather.description;
+            document.getElementById('feelsLike').textContent = weather.feelsLike + weather.unitSymbol;
+            document.getElementById('humidity').textContent = weather.humidity + '%';
+            document.getElementById('windSpeed').textContent = weather.windSpeed + ' m/s';
+            document.getElementById('visibility').textContent = weather.visibility + ' km';
+            document.getElementById('pressure').textContent = weather.pressure + ' hPa';
+            document.getElementById('clouds').textContent = weather.clouds + '%';
+            
+            // Update weather icon
+            const weatherIcon = document.getElementById('weatherIcon');
+            weatherIcon.src = weather.iconUrl;
+            weatherIcon.alt = weather.description;
+
+            // Store current data
+            currentWeather = weather;
+            currentCity = weather.city;
+
+            // Add to history
+            addToHistory(weather.city, weather);
+
+            // Show content
+            weatherContent.classList.remove('hidden');
+        }
+
+        /**
+         * Load weather for a specific city
+         */
+        async function loadWeather(city) {
+            try {
+                // Show loading
+                loadingState.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                weatherContent.classList.add('hidden');
+
+                // Fetch weather data
+                const data = await fetchCurrentWeather(city);
+
+                // Display weather
+                displayWeather(data);
+
+            } catch (error) {
+                // Show error
+                errorMessage.textContent = error.message || 'Failed to fetch weather data';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                // Hide loading
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Load weather by geolocation
+         */
+
+        // Event listeners
+        citySearch.addEventListener('input', (e) => {
+            updateCityDropdown(e.target.value);
+        });
+
+        citySearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const city = citySearch.value.trim();
+                if (city) {
+                    cityDropdown.classList.remove('active');
+                    loadWeather(city);
+                }
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!citySearch.contains(e.target) && !cityDropdown.contains(e.target)) {
+                cityDropdown.classList.remove('active');
+            }
+        });
+
+
+        // Load default city on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultCity = getDefaultCity();
+            loadWeather(defaultCity);
+        });
+    </script>
+</body>
+</html>

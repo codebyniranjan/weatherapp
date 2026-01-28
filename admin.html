@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Weather System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+</head>
+<body>
+    <main>
+        <div class="page-container">
+            <div class="container">
+                <header class="page-header">
+                    <h1>Admin Panel</h1>
+                    <p class="page-subtitle">Manage system users and settings</p>
+                </header>
+
+                <!-- Admin Stats -->
+                <div class="admin-stats">
+                    <div class="stat-card glass-card">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card glass-card">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                            <path d="M17 11a1 1 0 0 1 1 1v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5v-3a1 1 0 0 1 1-1"></path>
+                        </svg>
+                        <div class="stat-info">
+                            <div class="stat-value" id="adminCount">0</div>
+                            <div class="stat-label">Admin Users</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card glass-card">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <div class="stat-info">
+                            <div class="stat-value" id="recentUsers">0</div>
+                            <div class="stat-label">Recent Users (7d)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="admin-controls glass-card">
+                    <div class="search-wrapper">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <input type="text" id="userSearch" placeholder="Search users by name or email...">
+                    </div>
+                    <button class="refresh-btn" id="refreshBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <!-- Users Table -->
+                <div class="users-container glass-card">
+                    <div class="table-header">
+                        <h2>All Users</h2>
+                        <div class="table-info">
+                            <span id="displayedCount">0</span> users displayed
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="users-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                    <th>Created</th>
+                                    <th>Admin</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state hidden">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h3>No users found</h3>
+                    <p>Try adjusting your search criteria</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal hidden">
+        <div class="modal-content glass-card">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to delete this user?</p>
+            <div class="modal-user-info" id="deleteUserInfo"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancelDelete">Cancel</button>
+                <button class="btn-danger" id="confirmDelete">Delete User</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        // Protect admin page
+        requireAuth();
+        
+        // Check admin privileges
+        if (!isAdmin()) {
+            alert('Access Denied: Admin privileges required');
+            window.location.href = 'index.html';
+        }
+
+        applyDarkMode();
+
+        // DOM Elements
+        const totalUsersEl = document.getElementById('totalUsers');
+        const adminCountEl = document.getElementById('adminCount');
+        const recentUsersEl = document.getElementById('recentUsers');
+        const userSearchEl = document.getElementById('userSearch');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const usersTableBody = document.getElementById('usersTableBody');
+        const displayedCountEl = document.getElementById('displayedCount');
+        const emptyState = document.getElementById('emptyState');
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteUserInfo = document.getElementById('deleteUserInfo');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+
+        let allUsers = [];
+        let filteredUsers = [];
+        let userToDelete = null;
+
+        /**
+         * Load and display all users
+         */
+        function loadUsers() {
+            allUsers = getAllUsersAdmin();
+            if (!allUsers) {
+                alert('Failed to load users');
+                return;
+            }
+
+            filteredUsers = [...allUsers];
+            updateStats();
+            displayUsers();
+        }
+
+        /**
+         * Update statistics
+         */
+        function updateStats() {
+            const total = allUsers.length;
+            const admins = allUsers.filter(u => u.isAdmin).length;
+            
+            // Count users created in last 7 days
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const recent = allUsers.filter(u => {
+                const created = new Date(u.createdAt);
+                return created >= sevenDaysAgo;
+            }).length;
+
+            totalUsersEl.textContent = total;
+            adminCountEl.textContent = admins;
+            recentUsersEl.textContent = recent;
+        }
+
+        /**
+         * Display users in table
+         */
+        function displayUsers() {
+            if (filteredUsers.length === 0) {
+                usersTableBody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                displayedCountEl.textContent = '0';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            displayedCountEl.textContent = filteredUsers.length;
+
+            const currentUserId = getCurrentSession().userId;
+
+            usersTableBody.innerHTML = filteredUsers.map(user => `
+                <tr class="${user.id === currentUserId ? 'current-user' : ''}">
+                    <td><code>${user.id.substring(0, 8)}...</code></td>
+                    <td>
+                        <div class="user-name-cell">
+                            ${user.name}
+                            ${user.id === currentUserId ? '<span class="badge-you">You</span>' : ''}
+                        </div>
+                    </td>
+                    <td>${user.email}</td>
+                    <td><code class="password-cell">${user.password}</code></td>
+                    <td>${formatDate(user.createdAt)}</td>
+                    <td>
+                        ${user.isAdmin 
+                            ? '<span class="badge-admin">Admin</span>' 
+                            : '<span class="badge-user">User</span>'}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            ${user.id !== currentUserId ? `
+                                <button class="btn-icon btn-toggle" onclick="toggleAdmin('${user.id}')" title="${user.isAdmin ? 'Revoke' : 'Grant'} Admin">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                                        <path d="M17 11a1 1 0 0 1 1 1v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5v-3a1 1 0 0 1 1-1"></path>
+                                    </svg>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="showDeleteModal('${user.id}')" title="Delete User">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                            ` : '<span class="text-muted">—</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * Format date for display
+         */
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        /**
+         * Filter users based on search
+         */
+        function filterUsers(query) {
+            if (!query || query.trim() === '') {
+                filteredUsers = [...allUsers];
+            } else {
+                const search = query.toLowerCase();
+                filteredUsers = allUsers.filter(user => 
+                    user.name.toLowerCase().includes(search) ||
+                    user.email.toLowerCase().includes(search)
+                );
+            }
+            displayUsers();
+        }
+
+        /**
+         * Toggle admin status for user
+         */
+        function toggleAdmin(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            const action = user.isAdmin ? 'revoke admin privileges from' : 'grant admin privileges to';
+            const confirmed = confirm(`Are you sure you want to ${action} ${user.name}?`);
+            
+            if (confirmed) {
+                const result = toggleAdminStatus(userId);
+                if (result.success) {
+                    loadUsers();
+                    showNotification(result.message, 'success');
+                } else {
+                    alert(result.message);
+                }
+            }
+        }
+
+        /**
+         * Show delete confirmation modal
+         */
+        function showDeleteModal(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+
+            userToDelete = user;
+            deleteUserInfo.innerHTML = `
+                <strong>${user.name}</strong><br>
+                <small>${user.email}</small>
+            `;
+            deleteModal.classList.remove('hidden');
+        }
+
+        /**
+         * Hide delete modal
+         */
+        function hideDeleteModal() {
+            deleteModal.classList.add('hidden');
+            userToDelete = null;
+        }
+
+        /**
+         * Delete user
+         */
+        function confirmDeleteUser() {
+            if (!userToDelete) return;
+
+            const result = deleteUser(userToDelete.id);
+            if (result.success) {
+                hideDeleteModal();
+                loadUsers();
+                showNotification(result.message, 'success');
+            } else {
+                alert(result.message);
+            }
+        }
+
+        /**
+         * Show notification
+         */
+        function showNotification(message, type = 'info') {
+            // Simple alert for now - can be enhanced with custom notification UI
+            alert(message);
+        }
+
+        // Event Listeners
+        userSearchEl.addEventListener('input', (e) => {
+            filterUsers(e.target.value);
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            loadUsers();
+            userSearchEl.value = '';
+            showNotification('Users list refreshed', 'success');
+        });
+
+        cancelDelete.addEventListener('click', hideDeleteModal);
+        confirmDelete.addEventListener('click', confirmDeleteUser);
+
+        // Close modal when clicking outside
+        deleteModal.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                hideDeleteModal();
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+        });
+    </script>
+</body>
+</html>

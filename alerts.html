@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Alerts - Weather System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Weather Alerts</h1>
+            <p>Current weather warnings and advisories</p>
+        </div>
+
+        <!-- Alert City Selector -->
+        <div class="alert-search">
+            <div class="search-card glass-card">
+                <div class="search-row">
+                    <div class="search-input-container">
+                        <div class="search-input-wrapper">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="alertCitySearch" 
+                                placeholder="Search for a city..." 
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div id="alertCityDropdown" class="city-dropdown"></div>
+                    </div>
+                    <button id="alertSearchBtn" class="location-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>Check Alerts</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state hidden">
+            <div class="loading-spinner"></div>
+            <p>Checking weather conditions...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- Alerts Content -->
+        <div id="alertsContent" class="alerts-content hidden">
+            <div class="alerts-header-info">
+                <h2 id="alertCity">--</h2>
+                <p id="alertTimestamp">--</p>
+            </div>
+
+            <!-- Active Alerts -->
+            <div id="activeAlerts" class="alerts-grid">
+                <!-- Alert cards will be inserted here -->
+            </div>
+
+            <!-- No Alerts State -->
+            <div id="noAlerts" class="no-alerts hidden">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <h2>All Clear!</h2>
+                <p>No weather alerts for this location at the moment.</p>
+            </div>
+
+            <!-- Current Weather Summary -->
+            <div class="weather-summary-card">
+                <h3>Current Conditions</h3>
+                <div class="summary-grid" id="weatherSummary">
+                    <!-- Summary will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Alert Legend -->
+            <div class="alert-legend">
+                <h3>Alert Severity Levels</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-badge high">High</span>
+                        <span>Severe conditions requiring immediate attention</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-badge medium">Medium</span>
+                        <span>Conditions that require caution</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-badge low">Low</span>
+                        <span>Minor conditions to be aware of</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/cities.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        requireAuth();
+        applyDarkMode();
+
+        const alertCitySearch = document.getElementById('alertCitySearch');
+        const alertSearchBtn = document.getElementById('alertSearchBtn');
+        const alertCityDropdown = document.getElementById('alertCityDropdown');
+        const loadingState = document.getElementById('loadingState');
+        const errorMessage = document.getElementById('errorMessage');
+        const alertsContent = document.getElementById('alertsContent');
+        const activeAlerts = document.getElementById('activeAlerts');
+        const noAlerts = document.getElementById('noAlerts');
+
+        // City dropdown functionality
+        function updateAlertDropdown(query) {
+            if (!query || query.length < 2) {
+                alertCityDropdown.classList.remove('active');
+                alertCityDropdown.innerHTML = '';
+                return;
+            }
+
+            const filtered = POPULAR_CITIES.filter(city =>
+                city.name.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 10);
+
+            if (filtered.length === 0) {
+                alertCityDropdown.classList.remove('active');
+                return;
+            }
+
+            alertCityDropdown.innerHTML = filtered.map(city => `
+                <div class="city-dropdown-item" data-city="${city.name}">
+                    <span class="city-name">${city.name}</span>
+                    <span class="city-country">${city.country}</span>
+                </div>
+            `).join('');
+
+            alertCityDropdown.classList.add('active');
+
+            document.querySelectorAll('#alertCityDropdown .city-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const city = item.dataset.city;
+                    alertCitySearch.value = city;
+                    alertCityDropdown.classList.remove('active');
+                    loadAlerts(city);
+                });
+            });
+        }
+
+        async function loadAlerts(city) {
+            try {
+                loadingState.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                alertsContent.classList.add('hidden');
+
+                const data = await fetchCurrentWeather(city);
+                const unit = getTemperatureUnit();
+                const weather = formatWeatherData(data, unit);
+
+                // Update header
+                document.getElementById('alertCity').textContent = `${weather.city}, ${weather.country}`;
+                document.getElementById('alertTimestamp').textContent = new Date().toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+
+                // Generate alerts
+                const alerts = generateWeatherAlerts(weather);
+                displayAlerts(alerts);
+
+                // Display weather summary
+                displayWeatherSummary(weather);
+
+                alertsContent.classList.remove('hidden');
+
+            } catch (error) {
+                errorMessage.textContent = error.message || 'Failed to check weather alerts';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        function displayAlerts(alerts) {
+            if (!alerts || alerts.length === 0) {
+                activeAlerts.classList.add('hidden');
+                noAlerts.classList.remove('hidden');
+                return;
+            }
+
+            noAlerts.classList.add('hidden');
+            activeAlerts.classList.remove('hidden');
+
+            activeAlerts.innerHTML = alerts.map(alert => `
+                <div class="alert-card severity-${alert.severity}">
+                    <div class="alert-icon">${alert.icon}</div>
+                    <div class="alert-content">
+                        <div class="alert-header">
+                            <h3>${alert.title}</h3>
+                            <span class="alert-badge ${alert.severity}">${alert.severity}</span>
+                        </div>
+                        <p class="alert-message">${alert.message}</p>
+                        <div class="alert-type">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            Type: ${alert.type}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayWeatherSummary(weather) {
+            const summaryEl = document.getElementById('weatherSummary');
+            summaryEl.innerHTML = `
+                <div class="summary-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                    </svg>
+                    <div>
+                        <div class="summary-label">Temperature</div>
+                        <div class="summary-value">${weather.temperature}${weather.unitSymbol}</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+                    </svg>
+                    <div>
+                        <div class="summary-label">Wind Speed</div>
+                        <div class="summary-value">${weather.windSpeed} m/s</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                    </svg>
+                    <div>
+                        <div class="summary-label">Humidity</div>
+                        <div class="summary-value">${weather.humidity}%</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <div>
+                        <div class="summary-label">Visibility</div>
+                        <div class="summary-value">${weather.visibility} km</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                    <div>
+                        <div class="summary-label">Condition</div>
+                        <div class="summary-value">${weather.description}</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3h18"></path>
+                        <path d="M3 9h18"></path>
+                        <path d="M3 15h18"></path>
+                    </svg>
+                    <div>
+                        <div class="summary-label">Cloudiness</div>
+                        <div class="summary-value">${weather.clouds}%</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        alertCitySearch.addEventListener('input', (e) => {
+            updateAlertDropdown(e.target.value);
+        });
+
+        alertSearchBtn.addEventListener('click', () => {
+            const city = alertCitySearch.value.trim();
+            if (city) {
+                alertCityDropdown.classList.remove('active');
+                loadAlerts(city);
+            }
+        });
+
+        alertCitySearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const city = alertCitySearch.value.trim();
+                if (city) {
+                    alertCityDropdown.classList.remove('active');
+                    loadAlerts(city);
+                }
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!alertCitySearch.contains(e.target) && !alertCityDropdown.contains(e.target)) {
+                alertCityDropdown.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if alerts are enabled in settings
+            if (areAlertsEnabled()) {
+                loadAlerts(getDefaultCity());
+            } else {
+                errorMessage.textContent = 'Weather alerts are currently disabled. Enable them in Settings to view alerts.';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

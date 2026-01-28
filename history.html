@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search History - Weather System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>Search History</h1>
+            <p>Your recently searched cities and weather data</p>
+        </div>
+
+        <!-- History Controls -->
+        <div class="history-controls">
+            <div class="history-stats">
+                <span id="historyCount">0 searches</span>
+            </div>
+            <button id="clearHistoryBtn" class="btn-danger">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Clear All History
+            </button>
+        </div>
+
+        <!-- History Content -->
+        <div id="historyContent" class="history-content">
+            <!-- History items will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state hidden">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <h2>No Search History</h2>
+            <p>Your recently searched cities will appear here</p>
+            <a href="index.html" class="btn-primary">Search Weather</a>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        requireAuth();
+        applyDarkMode();
+
+        const historyContent = document.getElementById('historyContent');
+        const emptyState = document.getElementById('emptyState');
+        const historyCount = document.getElementById('historyCount');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        function displayHistory() {
+            const history = getFormattedHistory();
+            
+            if (history.length === 0) {
+                historyContent.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                clearHistoryBtn.disabled = true;
+                historyCount.textContent = '0 searches';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            historyContent.classList.remove('hidden');
+            clearHistoryBtn.disabled = false;
+            historyCount.textContent = `${history.length} search${history.length !== 1 ? 'es' : ''}`;
+
+            historyContent.innerHTML = history.map(item => `
+                <div class="history-card" data-city="${item.city}">
+                    <div class="history-main">
+                        ${item.icon ? `<img src="https://openweathermap.org/img/wn/${item.icon}@2x.png" alt="Weather" class="history-icon">` : '<div class="history-icon-placeholder">🌤️</div>'}
+                        <div class="history-info">
+                            <h3 class="history-city">${item.city}</h3>
+                            <p class="history-time">${item.timeAgo}</p>
+                            <p class="history-date">${item.fullDate}</p>
+                        </div>
+                        ${item.temperature ? `
+                        <div class="history-weather">
+                            <div class="history-temp">${item.temperature}${getTemperatureUnit() === 'celsius' ? '°C' : '°F'}</div>
+                            ${item.condition ? `<div class="history-condition">${item.condition}</div>` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="history-actions">
+                        <button class="btn-view" onclick="viewWeather('${item.city}')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            View Weather
+                        </button>
+                        <button class="btn-remove" onclick="removeHistory(${item.index})">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewWeather(city) {
+            window.location.href = `index.html?city=${encodeURIComponent(city)}`;
+        }
+
+        function removeHistory(index) {
+            if (confirm('Remove this search from history?')) {
+                removeHistoryEntry(index);
+                displayHistory();
+            }
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all search history? This action cannot be undone.')) {
+                clearSearchHistory();
+                displayHistory();
+            }
+        });
+
+        // Initial display
+        displayHistory();
+
+        // Auto-refresh every 30 seconds in case history was updated in another tab
+        setInterval(displayHistory, 30000);
+    </script>
+</body>
+</html>
